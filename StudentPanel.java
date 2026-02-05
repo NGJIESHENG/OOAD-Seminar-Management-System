@@ -178,7 +178,20 @@ public class StudentPanel extends JPanel {
     }
 
     private void showMySubmissions() {
-        showPlaceholder("My Submissions");
+        contentPanel.removeAll();
+        contentPanel.setLayout(new BorderLayout());
+
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        for (Submission sub : DataManager.allSubmissions){
+            listModel.addElement(sub.getTitle() + "[" + sub.getPresentationType() + "]");
+        }
+        JList<String> displayList = new JList<>(listModel);
+        contentPanel.add(new JLabel("Your Registered Submissions:", SwingConstants.CENTER), BorderLayout.NORTH);
+        contentPanel.add(new JScrollPane(displayList), BorderLayout.CENTER);
+
+        contentPanel.revalidate();
+        contentPanel.repaint();
+
     }
 
     private void showReviewResults() {

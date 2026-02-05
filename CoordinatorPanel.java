@@ -247,18 +247,19 @@ public class CoordinatorPanel extends JPanel {
                 new String[]{"Winner", "Runner-up", "Shortlisted"});
         panel.add(decisionCombo);
 
-        JButton saveBtn = new JButton("Compute Winner");
+        JButton saveBtn = new JButton("Compute and Save Winner");
         saveBtn.setBackground(new Color(50, 150, 50));
         saveBtn.setForeground(Color.WHITE);
 
         saveBtn.addActionListener(e -> {
             Evaluation winner = DataManager.getBestOralPresenter();
             if (winner != null){
-                JOptionPane.showMessageDialog(this, "The winner is: " + winner.getPrenterName() +
-            "\nWith a total score of: " + winner.getTotalScore());
+                String category = (String) awardCombo.getSelectedItem();
+                JOptionPane.showMessageDialog(this, "Award: " + category + "\n" + "Winner: " + winner.getPrenterName() +
+            "\n" + "Score: " + winner.getTotalScore() + "/40");
 
             }else{
-                JOptionPane.showMessageDialog(this,"No evaluations found yet!");
+                JOptionPane.showMessageDialog(this,"No evaluations found! Please have an Evaluator submit scores first.");
             }
             
         });
