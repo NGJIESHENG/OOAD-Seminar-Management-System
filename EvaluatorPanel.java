@@ -141,14 +141,20 @@ public class EvaluatorPanel extends JPanel {
 
         submitBtn.addActionListener(e -> {
 
-            int total = (int) claritySpinner.getValue()
-                    + (int) methodSpinner.getValue()
-                    + (int) resultSpinner.getValue()
-                    + (int) presSpinner.getValue();
+            int clarity = (int) claritySpinner.getValue();
+            int method = (int) methodSpinner.getValue();
+            int res = (int) resultSpinner.getValue();
+            int pres = (int) presSpinner.getValue();
+            String comments = commentArea.getText();
+            String presenter = "John Doe";
+
+            Evaluation newEval = new Evaluation(presenter, clarity, method, res, pres, comments);
+
+            DataManager.allEvaluations.add(newEval);
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Evaluation submitted!\nTotal Score: " + total + "/40\nComments saved.");
+                    "Evaluation submitted!\nTotal Score: " + newEval.getTotalScore()+ "/40\nComments saved.");
         });
 
         bottomPanel.add(submitBtn);

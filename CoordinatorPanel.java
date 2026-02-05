@@ -247,12 +247,20 @@ public class CoordinatorPanel extends JPanel {
                 new String[]{"Winner", "Runner-up", "Shortlisted"});
         panel.add(decisionCombo);
 
-        JButton saveBtn = new JButton("Save Decision");
+        JButton saveBtn = new JButton("Compute Winner");
         saveBtn.setBackground(new Color(50, 150, 50));
         saveBtn.setForeground(Color.WHITE);
 
         saveBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Award decision saved!");
+            Evaluation winner = DataManager.getBestOralPresenter();
+            if (winner != null){
+                JOptionPane.showMessageDialog(this, "The winner is: " + winner.getPrenterName() +
+            "\nWith a total score of: " + winner.getTotalScore());
+
+            }else{
+                JOptionPane.showMessageDialog(this,"No evaluations found yet!");
+            }
+            
         });
 
         contentPanel.add(panel, BorderLayout.CENTER);
