@@ -114,7 +114,17 @@ public class CoordinatorPanel extends JPanel {
         createBtn.setForeground(Color.WHITE);
 
         createBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Session created successfully!");
+
+            String date = dateField.getText();
+            String venue = venueField.getText();
+            String type = (String) typeCombo.getSelectedItem();
+            String time = (String) timeCombo.getSelectedItem();
+            int max = (int) maxSpinner.getValue();
+            
+            Session newSession = new Session(date, venue, type, time, max);
+            DataManager.allSessions.add(newSession);
+
+            JOptionPane.showMessageDialog(this, "Session Saved! Total Session:"+ DataManager.allSessions.size());
         });
 
         contentPanel.add(panel, BorderLayout.CENTER);
