@@ -114,9 +114,19 @@ public class StudentPanel extends JPanel {
         submitBtn.setForeground(Color.WHITE);
 
         submitBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(
+
+            String title = titleField.getText();
+            String abs = abstractArea.getText();
+            String supervisor = supervisorField.getText();
+            String type = (String) typeCombo.getSelectedItem();
+            
+            Submission sub = new Submission(title, abs, supervisor, type);
+
+            DataManager.allSubmissions.add(sub);
+
+;            JOptionPane.showMessageDialog(
                     this,
-                    "Registration submitted successfully!");
+                    "Registration submitted successfully for:" + title);
         });
 
         contentPanel.add(formPanel, BorderLayout.CENTER);
