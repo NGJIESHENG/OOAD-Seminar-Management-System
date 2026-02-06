@@ -19,7 +19,7 @@ public class Evaluation {
         return problemClarity + methodology + results + presentation;
     }
 
-    public String getPrenterName(){
+    public String getPresenterName(){
         return presenterName;
     }
 }
