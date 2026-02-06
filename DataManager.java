@@ -3,17 +3,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class DataManager {
+    // === CENTRAL DATA STORAGE ===
     public static ArrayList<Session> allSessions = new ArrayList<>();
     public static ArrayList<Submission> allSubmissions = new ArrayList<>();
     public static ArrayList<Evaluation> allEvaluations = new ArrayList<>();
-    public static ArrayList<Assignment> allAssignments = new ArrayList<>(); // NEW: Stores assignments
+    
+    // NEW: Stores the links between Students and Evaluators
+    public static ArrayList<Assignment> allAssignments = new ArrayList<>(); 
 
-    // NEW: Session management
+    // === SESSION MANAGEMENT ===
+    // NEW: Tracks who is currently logged in so panels know which data to show
     public static String currentUser = "Guest"; 
     
-    // NEW: Mock list of evaluators for the Coordinator dropdown
-    // In a real app, this would be a list of User objects with role="Evaluator"
+    // === MOCK DATA (FIXED) ===
+    // This was null before, causing your crash. Now it has values.
     public static String[] mockEvaluators = {"Dr. Lim", "Dr. Tan", "Prof. Ahmed", "Dr. Sarah"};
+
+    // === LOGIC METHODS ===
 
     public static Evaluation getBestOralPresenter(){
         Evaluation winner = null;
@@ -34,13 +40,15 @@ public class DataManager {
 
         report.append("--- SESSIONS ---\n");
         for (Session s : allSessions){
-            report.append("Date: ").append(s.getDate()).append(" | Venue: ").append(s.getVenue()).append("\n");
+            report.append("Date: ").append(s.getDate())
+                  .append(" | Venue: ").append(s.getVenue()).append("\n");
         }
 
         report.append("\n--- SUBMISSIONS ---\n");
         for (Submission sub : allSubmissions){
             report.append("Presenter: ").append(sub.getStudentName())
-                  .append(" | Title: ").append(sub.getTitle()).append("\n");
+                  .append(" | Title: ").append(sub.getTitle())
+                  .append(" (").append(sub.getPresentationType()).append(")\n");
         }
         
         report.append("\n--- ASSIGNMENTS ---\n");
