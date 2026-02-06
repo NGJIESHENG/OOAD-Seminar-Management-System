@@ -1,11 +1,19 @@
-import java.util.ArrayList;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class DataManager {
-    public static ArrayList <Session> allSessions = new ArrayList<>();
-    public static ArrayList <Submission> allSubmissions = new ArrayList<>();
-    public static ArrayList <Evaluation> allEvaluations = new ArrayList<>();
+    public static ArrayList<Session> allSessions = new ArrayList<>();
+    public static ArrayList<Submission> allSubmissions = new ArrayList<>();
+    public static ArrayList<Evaluation> allEvaluations = new ArrayList<>();
+    public static ArrayList<Assignment> allAssignments = new ArrayList<>(); // NEW: Stores assignments
+
+    // NEW: Session management
+    public static String currentUser = "Guest"; 
+    
+    // NEW: Mock list of evaluators for the Coordinator dropdown
+    // In a real app, this would be a list of User objects with role="Evaluator"
+    public static String[] mockEvaluators = {"Dr. Lim", "Dr. Tan", "Prof. Ahmed", "Dr. Sarah"};
 
     public static Evaluation getBestOralPresenter(){
         Evaluation winner = null;
@@ -31,20 +39,25 @@ public class DataManager {
 
         report.append("\n--- SUBMISSIONS ---\n");
         for (Submission sub : allSubmissions){
-            report.append("Title: ").append(sub.getTitle()).append(" (").append(sub.getPresentationType()).append(")\n");
+            report.append("Presenter: ").append(sub.getStudentName())
+                  .append(" | Title: ").append(sub.getTitle()).append("\n");
+        }
+        
+        report.append("\n--- ASSIGNMENTS ---\n");
+        for (Assignment a : allAssignments){
+            report.append("Presenter: ").append(a.getSubmission().getStudentName())
+                  .append(" assigned to Evaluator: ").append(a.getEvaluatorName()).append("\n");
         }
 
         report.append("\n--- EVALUATIONS AND AWARDS ---\n");
         Evaluation winner = getBestOralPresenter();
         if (winner != null){
-           
             report.append("Best Oral Presenter: ").append(winner.getPresenterName()) 
                     .append(" with a score of ").append(winner.getTotalScore()).append("/40\n");
         } else {
             report.append("No evaluation recorded yet.\n");
         }
 
-        
         return report.toString(); 
     }
 

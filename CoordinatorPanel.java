@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
+import java.util.ArrayList;
+import javax.swing.*; // Added import
 
 public class CoordinatorPanel extends JPanel {
 
@@ -8,21 +9,15 @@ public class CoordinatorPanel extends JPanel {
     private JFrame parent;
 
     public CoordinatorPanel(JFrame parent) {
-
         this.parent = parent;
-
         setLayout(new BorderLayout());
-
         add(createSidebar(), BorderLayout.WEST);
-
         contentPanel = new JPanel(new BorderLayout());
         add(contentPanel, BorderLayout.CENTER);
-
         showWelcome();
     }
 
     private JPanel createSidebar() {
-
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(new Color(240, 240, 240));
@@ -43,36 +38,29 @@ public class CoordinatorPanel extends JPanel {
         addSidebarButton(sidebar, "Log out", e -> showLogOut());
 
         sidebar.add(Box.createVerticalGlue());
-
         return sidebar;
     }
 
     private void addSidebarButton(JPanel panel, String text, ActionListener listener) {
-
         JButton button = new JButton(text);
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
         button.setMaximumSize(new Dimension(180, 40));
         button.setBackground(new Color(220, 230, 240));
         button.setFocusPainted(false);
         button.addActionListener(listener);
-
         panel.add(button);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
     }
 
     private void showWelcome() {
-
         contentPanel.removeAll();
-
         JLabel label = new JLabel(
                 "<html><div style='text-align:center;'>"
                         + "<h1>Welcome, Coordinator!</h1>"
                         + "<p>Please select a function from the menu.</p>"
                         + "</div></html>",
                 SwingConstants.CENTER);
-
         contentPanel.add(label, BorderLayout.CENTER);
-
         contentPanel.revalidate();
         contentPanel.repaint();
     }
@@ -80,7 +68,6 @@ public class CoordinatorPanel extends JPanel {
     // ---------------- Coordinator functions ----------------
 
     private void showSessionCreation() {
-
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
 
@@ -114,7 +101,6 @@ public class CoordinatorPanel extends JPanel {
         createBtn.setForeground(Color.WHITE);
 
         createBtn.addActionListener(e -> {
-
             String date = dateField.getText();
             String venue = venueField.getText();
             String type = (String) typeCombo.getSelectedItem();
@@ -129,37 +115,39 @@ public class CoordinatorPanel extends JPanel {
 
         contentPanel.add(panel, BorderLayout.CENTER);
         contentPanel.add(createBtn, BorderLayout.SOUTH);
-
         contentPanel.revalidate();
         contentPanel.repaint();
     }
 
     private void showAssignEvaluators() {
-
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
 
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Assign Evaluators"));
 
-        panel.add(new JLabel("Presenter:"));
-        JComboBox<String> presenterCombo = new JComboBox<>(
-                new String[]{"John Doe", "Jane Smith"});
+        // === FIXED: Dynamic Data Loading ===
+        
+        // 1. Load registered Submissions
+        ArrayList<String> submissionTitles = new ArrayList<>();
+        for (Submission s : DataManager.allSubmissions) {
+            submissionTitles.add(s.getTitle() + " (" + s.getStudentName() + ")");
+        }
+        
+        String[] presenters = submissionTitles.toArray(new String[0]);
+        JComboBox<String> presenterCombo = new JComboBox<>(presenters);
+        
+        // 2. Load Evaluators (Using Mock list for now)
+        JComboBox<String> evaluatorCombo = new JComboBox<>(DataManager.mockEvaluators);
+
+        panel.add(new JLabel("Select Submission:"));
         panel.add(presenterCombo);
 
-        panel.add(new JLabel("Evaluator:"));
-        JComboBox<String> evaluatorCombo = new JComboBox<>(
-                new String[]{"Dr. Lim", "Dr. Tan"});
+        panel.add(new JLabel("Select Evaluator:"));
         panel.add(evaluatorCombo);
 
-        panel.add(new JLabel("Session:"));
-        JComboBox<String> sessionCombo = new JComboBox<>(
-                new String[]{"Session A", "Session B"});
-        panel.add(sessionCombo);
-
         panel.add(new JLabel("Role:"));
-        JComboBox<String> roleCombo = new JComboBox<>(
-                new String[]{"Primary Evaluator", "Secondary Evaluator"});
+        JComboBox<String> roleCombo = new JComboBox<>(new String[]{"Primary Evaluator", "Secondary Evaluator"});
         panel.add(roleCombo);
 
         JButton assignBtn = new JButton("Assign");
@@ -167,7 +155,20 @@ public class CoordinatorPanel extends JPanel {
         assignBtn.setForeground(Color.WHITE);
 
         assignBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Evaluator assigned successfully!");
+            if (presenterCombo.getItemCount() == 0) {
+                JOptionPane.showMessageDialog(this, "No submissions available to assign!");
+                return;
+            }
+
+            int selectedIndex = presenterCombo.getSelectedIndex();
+            Submission selectedSubmission = DataManager.allSubmissions.get(selectedIndex);
+            String selectedEvaluator = (String) evaluatorCombo.getSelectedItem();
+
+            // === FIXED: Save Assignment to DataManager ===
+            Assignment newAssignment = new Assignment(selectedSubmission, selectedEvaluator);
+            DataManager.allAssignments.add(newAssignment);
+
+            JOptionPane.showMessageDialog(this, "Evaluator assigned successfully to " + selectedSubmission.getStudentName());
         });
 
         contentPanel.add(panel, BorderLayout.CENTER);
@@ -178,7 +179,6 @@ public class CoordinatorPanel extends JPanel {
     }
 
     private void showReportGeneration() {
-
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
 
@@ -190,15 +190,10 @@ public class CoordinatorPanel extends JPanel {
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         String[] reportTypes = {
-                "Session Schedule Report",
-                "Evaluation Summary Report",
-                "Participant List",
-                "Award Nomination Report",
                 "Full Seminar Report"
         };
 
         for (String report : reportTypes) {
-
             JButton reportBtn = new JButton("Generate: " + report);
             reportBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
             reportBtn.setMaximumSize(new Dimension(300, 40));
@@ -211,7 +206,7 @@ public class CoordinatorPanel extends JPanel {
                     textArea.setEditable(false);
                     textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
                     JScrollPane scrollPane = new JScrollPane(textArea);
-                    scrollPane.setPreferredSize(new Dimension(400, 300));
+                    scrollPane.setPreferredSize(new Dimension(500, 400));
 
                     Object[] options = {"Download .txt", "Close"};
                     int choice = JOptionPane.showOptionDialog(this, scrollPane,
@@ -222,30 +217,22 @@ public class CoordinatorPanel extends JPanel {
                     );
                     if (choice == JOptionPane.YES_OPTION){
                         DataManager.saveReportToFile(data, "Seminar_Report.txt");
-                        JOptionPane.showMessageDialog(this , "Report saved as 'Seminar_Report.txt' in your project folder!");
+                        JOptionPane.showMessageDialog(this , "Report saved as 'Seminar_Report.txt'!");
                } 
-            }else{
-                JOptionPane.showMessageDialog(
-                        this,
-                        report + " logic not yet linked");
-                }
+            }
             });
 
             panel.add(reportBtn);
-            panel.add(Box.createRigidArea(new Dimension(0, 10)));
         }
 
         contentPanel.add(panel, BorderLayout.CENTER);
-
         contentPanel.revalidate();
         contentPanel.repaint();
     }
 
     private void showAwardManagement() {
-
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
-
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Manage Awards"));
 
@@ -253,21 +240,6 @@ public class CoordinatorPanel extends JPanel {
         JComboBox<String> awardCombo = new JComboBox<>(
                 new String[]{"Best Presentation", "Best Poster", "Best Research"});
         panel.add(awardCombo);
-
-        panel.add(new JLabel("Nominee:"));
-        JComboBox<String> nomineeCombo = new JComboBox<>(
-                new String[]{"John Doe", "Jane Smith"});
-        panel.add(nomineeCombo);
-
-        panel.add(new JLabel("Evaluator Panel:"));
-        JComboBox<String> panelCombo = new JComboBox<>(
-                new String[]{"Panel A", "Panel B"});
-        panel.add(panelCombo);
-
-        panel.add(new JLabel("Decision:"));
-        JComboBox<String> decisionCombo = new JComboBox<>(
-                new String[]{"Winner", "Runner-up", "Shortlisted"});
-        panel.add(decisionCombo);
 
         JButton saveBtn = new JButton("Compute and Save Winner");
         saveBtn.setBackground(new Color(50, 150, 50));
@@ -288,19 +260,12 @@ public class CoordinatorPanel extends JPanel {
 
         contentPanel.add(panel, BorderLayout.CENTER);
         contentPanel.add(saveBtn, BorderLayout.SOUTH);
-
         contentPanel.revalidate();
         contentPanel.repaint();
     }
 
     private void showLogOut() {
-
-        int result = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to logout?",
-                "Logout",
-                JOptionPane.YES_NO_OPTION);
-
+        int result = JOptionPane.showConfirmDialog(this,"Are you sure you want to logout?","Logout",JOptionPane.YES_NO_OPTION);
         if (result == JOptionPane.YES_OPTION) {
             parent.dispose();
             new Login();

@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import javax.swing.*;
 
 public class EvaluatorPanel extends JPanel {
@@ -8,21 +9,15 @@ public class EvaluatorPanel extends JPanel {
     private JFrame parent;
 
     public EvaluatorPanel(JFrame parent) {
-
         this.parent = parent;
-
         setLayout(new BorderLayout());
-
         add(createSidebar(), BorderLayout.WEST);
-
         contentPanel = new JPanel(new BorderLayout());
         add(contentPanel, BorderLayout.CENTER);
-
         showWelcome();
     }
 
     private JPanel createSidebar() {
-
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(new Color(240, 240, 240));
@@ -38,40 +33,32 @@ public class EvaluatorPanel extends JPanel {
 
         addSidebarButton(sidebar, "Assigned Presentations", e -> showAssignedPresentations());
         addSidebarButton(sidebar, "Evaluate Submission", e -> showEvaluationForm());
-        addSidebarButton(sidebar, "View Evaluation History", e -> showEvaluationHistory());
         addSidebarButton(sidebar, "Log out", e -> showLogOut());
 
         sidebar.add(Box.createVerticalGlue());
-
         return sidebar;
     }
 
     private void addSidebarButton(JPanel panel, String text, ActionListener listener) {
-
         JButton button = new JButton(text);
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
         button.setMaximumSize(new Dimension(180, 40));
         button.setBackground(new Color(220, 230, 240));
         button.setFocusPainted(false);
         button.addActionListener(listener);
-
         panel.add(button);
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
     }
 
     private void showWelcome() {
-
         contentPanel.removeAll();
-
         JLabel label = new JLabel(
                 "<html><div style='text-align:center;'>"
-                        + "<h1>Welcome, Evaluator!</h1>"
+                        + "<h1>Welcome, " + DataManager.currentUser + "!</h1>"
                         + "<p>Please select a function from the menu.</p>"
                         + "</div></html>",
                 SwingConstants.CENTER);
-
         contentPanel.add(label, BorderLayout.CENTER);
-
         contentPanel.revalidate();
         contentPanel.repaint();
     }
@@ -79,37 +66,60 @@ public class EvaluatorPanel extends JPanel {
     // ---------------- Evaluator functions ----------------
 
     private void showAssignedPresentations() {
-
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
 
-        String[] columns = {"Presenter", "Title", "Session", "Status"};
-        Object[][] data = {
-                {"John Doe", "AI-based Learning Systems", "Session A", "Pending"},
-                {"Jane Smith", "Data Mining for Healthcare", "Session B", "Evaluated"}
-        };
+        String[] columns = {"Presenter", "Title", "Type"};
+        
+        // === FIXED: Filter Assignments by Logged-in Evaluator ===
+        ArrayList<String[]> userAssignments = new ArrayList<>();
+        
+        for (Assignment a : DataManager.allAssignments) {
+            // Check if this assignment belongs to the current user
+            if (a.getEvaluatorName().equals(DataManager.currentUser)) {
+                userAssignments.add(new String[]{
+                    a.getSubmission().getStudentName(),
+                    a.getSubmission().getTitle(),
+                    a.getSubmission().getPresentationType()
+                });
+            }
+        }
+        
+        Object[][] data = new Object[userAssignments.size()][3];
+        for (int i=0; i<userAssignments.size(); i++) {
+            data[i] = userAssignments.get(i);
+        }
 
         JTable table = new JTable(data, columns);
-
         contentPanel.add(new JScrollPane(table), BorderLayout.CENTER);
-
         contentPanel.revalidate();
         contentPanel.repaint();
     }
 
     private void showEvaluationForm() {
-
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
 
-        JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(7, 2, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Evaluate Presentation"));
 
-        panel.add(new JLabel("Presenter:"));
-        panel.add(new JLabel("John Doe (PhD Candidate)"));
+        // === FIXED: Only show Assigned Students in Dropdown ===
+        ArrayList<String> myStudents = new ArrayList<>();
+        for (Assignment a : DataManager.allAssignments) {
+            if (a.getEvaluatorName().equals(DataManager.currentUser)) {
+                myStudents.add(a.getSubmission().getStudentName());
+            }
+        }
+        
+        if (myStudents.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "You have no assigned students to evaluate.");
+            showWelcome();
+            return;
+        }
 
-        panel.add(new JLabel("Research Title:"));
-        panel.add(new JLabel("AI-based Learning Systems"));
+        JComboBox<String> studentCombo = new JComboBox<>(myStudents.toArray(new String[0]));
+        panel.add(new JLabel("Select Student:"));
+        panel.add(studentCombo);
 
         panel.add(new JLabel("Problem Clarity (1-10):"));
         JSpinner claritySpinner = new JSpinner(new SpinnerNumberModel(5, 1, 10, 1));
@@ -127,71 +137,40 @@ public class EvaluatorPanel extends JPanel {
         JSpinner presSpinner = new JSpinner(new SpinnerNumberModel(5, 1, 10, 1));
         panel.add(presSpinner);
 
-        contentPanel.add(panel, BorderLayout.CENTER);
-
-        JPanel bottomPanel = new JPanel();
-
+        JPanel bottomPanel = new JPanel(new BorderLayout());
         JTextArea commentArea = new JTextArea(3, 40);
+        commentArea.setBorder(BorderFactory.createTitledBorder("Comments"));
         commentArea.setLineWrap(true);
-        bottomPanel.add(new JScrollPane(commentArea));
+        bottomPanel.add(new JScrollPane(commentArea), BorderLayout.CENTER);
 
         JButton submitBtn = new JButton("Submit Evaluation");
         submitBtn.setBackground(new Color(50, 150, 50));
         submitBtn.setForeground(Color.WHITE);
 
         submitBtn.addActionListener(e -> {
-
             int clarity = (int) claritySpinner.getValue();
             int method = (int) methodSpinner.getValue();
             int res = (int) resultSpinner.getValue();
             int pres = (int) presSpinner.getValue();
             String comments = commentArea.getText();
-            String presenter = "John Doe";
+            String presenter = (String) studentCombo.getSelectedItem();
 
             Evaluation newEval = new Evaluation(presenter, clarity, method, res, pres, comments);
-
             DataManager.allEvaluations.add(newEval);
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Evaluation submitted!\nTotal Score: " + newEval.getTotalScore()+ "/40\nComments saved.");
+            JOptionPane.showMessageDialog(this, "Evaluation submitted for " + presenter);
         });
 
-        bottomPanel.add(submitBtn);
-
+        bottomPanel.add(submitBtn, BorderLayout.SOUTH);
+        contentPanel.add(panel, BorderLayout.CENTER);
         contentPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         contentPanel.revalidate();
         contentPanel.repaint();
     }
 
-    private void showEvaluationHistory() {
-
-        contentPanel.removeAll();
-        contentPanel.setLayout(new BorderLayout());
-
-        String[] columns = {"Presenter", "Title", "Score", "Date"};
-        Object[][] data = {
-                {"John Doe", "AI-based Learning Systems", "32/40", "2025-01-10"},
-                {"Jane Smith", "Data Mining for Healthcare", "35/40", "2025-01-12"}
-        };
-
-        JTable table = new JTable(data, columns);
-
-        contentPanel.add(new JScrollPane(table), BorderLayout.CENTER);
-
-        contentPanel.revalidate();
-        contentPanel.repaint();
-    }
-
     private void showLogOut() {
-
-        int result = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to logout?",
-                "Logout",
-                JOptionPane.YES_NO_OPTION);
-
+        int result = JOptionPane.showConfirmDialog(this,"Are you sure you want to logout?","Logout",JOptionPane.YES_NO_OPTION);
         if (result == JOptionPane.YES_OPTION) {
             parent.dispose();
             new Login();
