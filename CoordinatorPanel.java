@@ -204,9 +204,31 @@ public class CoordinatorPanel extends JPanel {
             reportBtn.setMaximumSize(new Dimension(300, 40));
 
             reportBtn.addActionListener(e -> {
+                if (report.equals("Full Seminar Report")){
+                    String data = DataManager.generateFullSeminarReport();
+
+                    JTextArea textArea = new JTextArea(data);
+                    textArea.setEditable(false);
+                    textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+                    JScrollPane scrollPane = new JScrollPane(textArea);
+                    scrollPane.setPreferredSize(new Dimension(400, 300));
+
+                    Object[] options = {"Download .txt", "Close"};
+                    int choice = JOptionPane.showOptionDialog(this, scrollPane,
+                        "Final Seminar Report",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null, options, options[0]
+                    );
+                    if (choice == JOptionPane.YES_OPTION){
+                        DataManager.saveReportToFile(data, "Seminar_Report.txt");
+                        JOptionPane.showMessageDialog(this , "Report saved as 'Seminar_Report.txt' in your project folder!");
+               } 
+            }else{
                 JOptionPane.showMessageDialog(
                         this,
-                        report + " generated successfully!\n(Simulated - would export to PDF in full version)");
+                        report + " logic not yet linked");
+                }
             });
 
             panel.add(reportBtn);
@@ -255,7 +277,7 @@ public class CoordinatorPanel extends JPanel {
             Evaluation winner = DataManager.getBestOralPresenter();
             if (winner != null){
                 String category = (String) awardCombo.getSelectedItem();
-                JOptionPane.showMessageDialog(this, "Award: " + category + "\n" + "Winner: " + winner.getPrenterName() +
+                JOptionPane.showMessageDialog(this, "Award: " + category + "\n" + "Winner: " + winner.getPresenterName() +
             "\n" + "Score: " + winner.getTotalScore() + "/40");
 
             }else{

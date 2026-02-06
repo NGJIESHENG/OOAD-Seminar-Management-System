@@ -17,4 +17,12 @@ public class Session {
     public String toString (){
         return date + "-" + type + "(" + venue + ")";
     }
+
+    public String getDate(){
+        return date;
+    }
+
+    public String getVenue(){
+        return venue;
+    }
 }
