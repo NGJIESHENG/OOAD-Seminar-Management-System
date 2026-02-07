@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 
 public class DataManager {
-    // === CENTRAL DATA STORAGE ===
+   
     public static ArrayList<Session> allSessions = new ArrayList<>();
     public static ArrayList<Submission> allSubmissions = new ArrayList<>();
     public static ArrayList<Evaluation> allEvaluations = new ArrayList<>();
@@ -10,9 +10,7 @@ public class DataManager {
     public static String currentUser = "Guest"; 
     public static String[] mockEvaluators = {"Dr. Lim", "Dr. Tan", "Prof. Ahmed", "Dr. Sarah"};
 
-    // === LOGIC METHODS ===
-
-    // 1. Helper: Find best presenter by type (Oral or Poster)
+    
     public static Evaluation getBestPresenter(String type){
         Evaluation winner = null;
         int highestScore = -1;
@@ -37,7 +35,7 @@ public class DataManager {
 
     public Evaluation getBestOralPresenter() { return getBestPresenter("Oral"); }
 
-    // 2. RESTORED: Get People's Choice Winner
+   
     public static Submission getPeoplesChoiceWinner() {
         Submission winner = null;
         int maxVotes = -1;
@@ -50,7 +48,7 @@ public class DataManager {
         return winner;
     }
 
-    // 3. RESTORED: Generate Award Ceremony Agenda
+    
     public static String generateAwardAgenda() {
         StringBuilder sb = new StringBuilder();
         sb.append("=========================================\n");
@@ -80,7 +78,6 @@ public class DataManager {
         return sb.toString();
     }
 
-    // 4. RESTORED: Full Seminar Report (With Board IDs included)
     public static String generateFullSeminarReport(){
         StringBuilder report = new StringBuilder();
         report.append("=========================================\n");
@@ -115,5 +112,41 @@ public class DataManager {
         }
         
         return report.toString(); 
+    }
+
+    public static String generateParticipantList(){
+        if (allSubmissions.isEmpty()) return "No participants registered yet.";
+
+        StringBuilder sb = new StringBuilder("=== REGISTERED PARTICIPANTS ===\\n\\n");
+        int count = 1;
+        for (Submission s : allSubmissions){
+            sb.append(count++).append(". ")
+                .append(s.getStudentName())
+                .append(" - ").append(s.getTitle()).append("\n");
+        }
+        return sb.toString();
+    }
+
+    public static String generateSessionSchedule(){
+        if (allSessions.isEmpty()) return "No sessions created yet.";
+        
+        StringBuilder sb = new StringBuilder ("=== SEMINAR SESSION SCHEDULE ===\\n\\n");
+        for (Session s : allSessions){
+            sb.append("Date: ").append(s.getDate())
+                .append(" | Venue: ").append(s.getVenue())
+                .append(" | Type: ").append(s.toString()).append("\n");
+        }
+
+        sb.append("Presenters:\n");
+        boolean hasPresenters = false;
+        for (Submission sub : allSubmissions) {
+            if (sub.getPresentationType().contains(sb.toString().split("-")[1].split("\\(")[0])){
+                sb.append("  -").append(sub.getStudentName()).append(": ").append(sub.getTitle()).append("\n");
+                hasPresenters = true;
+            }
+            if (!hasPresenters) sb.append("  - (No presenters registered for this type yet)\n");
+            sb.append("------------------------------------------------\n");
+        }
+        return sb.toString();
     }
 }
