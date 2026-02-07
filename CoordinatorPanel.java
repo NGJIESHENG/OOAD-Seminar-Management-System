@@ -65,8 +65,7 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    // ---------------- Coordinator functions ----------------
-
+    
     private void showSessionCreation() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
@@ -126,9 +125,7 @@ public class CoordinatorPanel extends JPanel {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Assign Evaluators"));
 
-        // === FIXED: Dynamic Data Loading ===
         
-        // 1. Load registered Submissions
         ArrayList<String> submissionTitles = new ArrayList<>();
         for (Submission s : DataManager.allSubmissions) {
             submissionTitles.add(s.getTitle() + " (" + s.getStudentName() + ")");
@@ -136,8 +133,7 @@ public class CoordinatorPanel extends JPanel {
         
         String[] presenters = submissionTitles.toArray(new String[0]);
         JComboBox<String> presenterCombo = new JComboBox<>(presenters);
-        
-        // 2. Load Evaluators (Using Mock list for now)
+     
         JComboBox<String> evaluatorCombo = new JComboBox<>(DataManager.mockEvaluators);
 
         panel.add(new JLabel("Select Submission:"));
@@ -164,7 +160,7 @@ public class CoordinatorPanel extends JPanel {
             Submission selectedSubmission = DataManager.allSubmissions.get(selectedIndex);
             String selectedEvaluator = (String) evaluatorCombo.getSelectedItem();
 
-            // === FIXED: Save Assignment to DataManager ===
+          
             Assignment newAssignment = new Assignment(selectedSubmission, selectedEvaluator);
             DataManager.allAssignments.add(newAssignment);
 
