@@ -71,7 +71,7 @@ public class StudentPanel extends JPanel {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
         
-        // 1. Get My Submissions
+        
         ArrayList<Submission> mySubs = new ArrayList<>();
         for(Submission s : DataManager.allSubmissions) {
             if(s.getStudentName().equals(DataManager.currentUser)) mySubs.add(s);
@@ -141,7 +141,7 @@ public class StudentPanel extends JPanel {
         contentPanel.revalidate(); contentPanel.repaint();
     }
 
-    // --- NEW: Filter by Status & Date Logic ---
+    
     private void showMySubmissions() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
@@ -150,7 +150,7 @@ public class StudentPanel extends JPanel {
         header.setFont(new Font("Arial", Font.BOLD, 24));
         header.setBorder(new EmptyBorder(0, 0, 15, 0));
 
-        // Filter Controls
+       
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JComboBox<String> statusFilter = new JComboBox<>(new String[]{"All Status", "Pending", "Evaluated"});
         JButton applyBtn = new JButton("Filter");
@@ -159,7 +159,7 @@ public class StudentPanel extends JPanel {
         filterPanel.add(statusFilter);
         filterPanel.add(applyBtn);
 
-        // Table
+        
         String[] columns = {"Title", "Type", "Status", "Score"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         JTable table = new JTable(model);
@@ -170,15 +170,15 @@ public class StudentPanel extends JPanel {
             String selectedStatus = (String) statusFilter.getSelectedItem();
 
             for (Submission s : DataManager.allSubmissions) {
-                // Filter 1: Must belong to logged-in user
+                
                 if (s.getStudentName().equals(DataManager.currentUser)) {
                     
-                    // Check Status by looking for an Evaluation
+                   
                     boolean isEvaluated = false;
                     int score = -1;
                     
                     for (Evaluation ev : DataManager.allEvaluations) {
-                        // Matching logic: In this prototype, we match by Presenter Name
+
                         if (ev.getPresenterName().equals(s.getStudentName())) {
                             isEvaluated = true;
                             score = ev.getTotalScore();
@@ -186,7 +186,7 @@ public class StudentPanel extends JPanel {
                         }
                     }
 
-                    // Filter 2: Apply Status Filter
+                 
                     boolean match = true;
                     if ("Pending".equals(selectedStatus) && isEvaluated) match = false;
                     if ("Evaluated".equals(selectedStatus) && !isEvaluated) match = false;
@@ -234,6 +234,19 @@ public class StudentPanel extends JPanel {
 
         JButton submitBtn = new JButton("Submit Registration");
         submitBtn.addActionListener(e -> {
+
+            String title = titleField.getText().trim();
+            String resAbstract = abstractArea.getText().trim();
+            String supervisor = supervisorField.getText().trim();
+           
+            if (title.isEmpty() || resAbstract.isEmpty() || supervisor.isEmpty()){
+                JOptionPane.showMessageDialog(this,
+                    "All fields (Title, Abstract, and Supervisor) are required",
+                    "Input Error",
+                    JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
             Submission sub = new Submission(
                 titleField.getText(), 
                 abstractArea.getText(), 

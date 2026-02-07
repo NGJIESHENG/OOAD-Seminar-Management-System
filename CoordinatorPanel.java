@@ -69,7 +69,7 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    // --- NEW: View Assignments with Search & Filter ---
+  
     private void showViewAssignments() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
@@ -78,7 +78,7 @@ public class CoordinatorPanel extends JPanel {
         header.setFont(new Font("Arial", Font.BOLD, 24));
         header.setBorder(new EmptyBorder(0, 0, 15, 0));
 
-        // Filter Controls
+       
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         
         JTextField searchField = new JTextField(15);
@@ -91,7 +91,6 @@ public class CoordinatorPanel extends JPanel {
         filterPanel.add(typeFilter);
         filterPanel.add(applyBtn);
 
-        // Table
         String[] columns = {"Student", "Title", "Session Type", "Assigned Evaluator"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         JTable table = new JTable(model);
@@ -124,7 +123,7 @@ public class CoordinatorPanel extends JPanel {
             }
         };
 
-        loadData.run(); // Initial load
+        loadData.run(); // 
         applyBtn.addActionListener(e -> loadData.run());
 
         JPanel top = new JPanel(new BorderLayout());
@@ -230,14 +229,26 @@ public class CoordinatorPanel extends JPanel {
 
     private void showReportGeneration() {
         contentPanel.removeAll();
-        JButton genBtn = new JButton("Full Seminar Report");
+        contentPanel.setLayout(new BorderLayout());
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JButton fullReportBtn = new JButton ("Full Seminar Report");
+        JButton participantBtn = new JButton ("Participant List");
+        JButton scheduleBtn = new JButton ("Session Schedule");
+        
         JTextArea area = new JTextArea();
+        area.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        area.setEditable(false);
+
+        fullReportBtn.addActionListener(e -> area.setText(DataManager.generateFullSeminarReport()));
+        participantBtn.addActionListener(e -> area.setText(DataManager.generateParticipantList()));
+        scheduleBtn.addActionListener(e -> area.setText(DataManager.generateSessionSchedule()));
         
-        genBtn.addActionListener(e -> {
-            area.setText(new DataManager().generateFullSeminarReport());
-        });
+        buttonPanel.add(fullReportBtn);
+        buttonPanel.add(participantBtn);
+        buttonPanel.add(scheduleBtn);
         
-        contentPanel.add(genBtn, BorderLayout.NORTH);
+        contentPanel.add(buttonPanel, BorderLayout.NORTH);
         contentPanel.add(new JScrollPane(area), BorderLayout.CENTER);
         contentPanel.revalidate(); contentPanel.repaint();
     }
@@ -246,7 +257,18 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.removeAll();
         contentPanel.setLayout(new GridLayout(6, 2, 10, 10));
 
+        ArrayList<String> registeredNames = new ArrayList<>();
+        for (Submission s : DataManager.allSubmissions){
+            registeredNames.add(s.getStudentName());
+        }
+
+        if (registeredNames.isEmpty()){
+            registeredNames.add("No Registered Students");
+        }
+
+        JComboBox<String> nomineeCombo = new JComboBox <>(registeredNames.toArray(new String[0]));
         JComboBox<String> awardTypeBox = new JComboBox<>(new String[]{"Best Oral Presentation", "Best Poster Presentation", "People's Choice"});
+
         JButton calcBtn = new JButton("Compute Winner");
 
         calcBtn.addActionListener(e -> {
@@ -270,11 +292,24 @@ public class CoordinatorPanel extends JPanel {
         });
 
         contentPanel.add(new JLabel("Award Category:")); contentPanel.add(awardTypeBox);
-        contentPanel.add(new JLabel("")); contentPanel.add(calcBtn);
-        contentPanel.add(new JLabel("----------------")); contentPanel.add(new JLabel("----------------"));
-        contentPanel.add(new JLabel("Ceremony Docs:")); contentPanel.add(agendaBtn);
+        contentPanel.add(awardTypeBox);
 
-        contentPanel.revalidate(); contentPanel.repaint();
+        contentPanel.add(new JLabel("Nominee List:"));
+        contentPanel.add(nomineeCombo);
+
+        contentPanel.add(new JLabel(""));
+        contentPanel.add(calcBtn);
+
+        contentPanel.add(new JLabel("----------------")); 
+        contentPanel.add(new JLabel("----------------"));
+
+        contentPanel.add(new JLabel("Ceremony Docs:"));
+        contentPanel.add(agendaBtn);
+
+        contentPanel.revalidate();
+        contentPanel.repaint();
+
+
     }
 
     private void showLogOut() {

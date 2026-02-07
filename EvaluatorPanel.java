@@ -1,8 +1,8 @@
+import java.awt.*;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.util.ArrayList;
 
 public class EvaluatorPanel extends JPanel {
     private JFrame parent;
@@ -137,20 +137,25 @@ public class EvaluatorPanel extends JPanel {
 
     private void showEvaluationForm() {
         contentPanel.removeAll();
-        contentPanel.setLayout(new GridLayout(6, 1, 10, 10));
+        contentPanel.setLayout(new GridLayout(7, 1, 10, 10));
 
         JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p1.add(new JLabel("Select Student:"));
         
-        // Filter student list to only show those assigned to this evaluator
+        
         ArrayList<String> myStudents = new ArrayList<>();
         for (Assignment a : DataManager.allAssignments) {
             if (a.getEvaluatorName().equals(DataManager.currentUser)) {
                 myStudents.add(a.getSubmission().getStudentName());
             }
         }
+
+        if (myStudents.isEmpty()){
+            myStudents.add("No Students Assigned to You");
+        }
         
-        JComboBox<String> studentBox = new JComboBox<>(myStudents.toArray(new String[0]));
+        JComboBox<String> studentBox = new JComboBox<>(myStudents.toArray(String[]::new));
+        
         p1.add(studentBox);
 
         JPanel p2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -174,6 +179,11 @@ public class EvaluatorPanel extends JPanel {
         comments.setLineWrap(true);
         p5.add(new JScrollPane(comments), BorderLayout.CENTER);
 
+        JPanel p6 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        p6.add(new JLabel("Presentation Skills (1-10):"));
+        JSpinner presentationSpin = new JSpinner(new SpinnerNumberModel(5, 1, 10, 1));
+        p6.add(presentationSpin);
+
         JButton submit = new JButton("Submit Evaluation");
         submit.setBackground(new Color(0, 102, 204));
         submit.setForeground(Color.WHITE);
@@ -189,7 +199,7 @@ public class EvaluatorPanel extends JPanel {
                 (int) claritySpin.getValue(),
                 (int) methodSpin.getValue(),
                 (int) resultSpin.getValue(),
-                (int) claritySpin.getValue(), 
+                (int) presentationSpin.getValue(), 
                 comments.getText()
             );
             DataManager.allEvaluations.add(ev);
@@ -201,6 +211,7 @@ public class EvaluatorPanel extends JPanel {
         contentPanel.add(p2);
         contentPanel.add(p3);
         contentPanel.add(p4);
+        contentPanel.add(p6);
         contentPanel.add(p5);
         contentPanel.add(submit);
 
