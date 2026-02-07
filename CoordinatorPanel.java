@@ -1,7 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
-import javax.swing.*; // Added import
+import javax.swing.*;
 
 public class CoordinatorPanel extends JPanel {
 
@@ -33,6 +33,7 @@ public class CoordinatorPanel extends JPanel {
 
         addSidebarButton(sidebar, "Create Session", e -> showSessionCreation());
         addSidebarButton(sidebar, "Assign Evaluators", e -> showAssignEvaluators());
+        addSidebarButton(sidebar, "Assign Board IDs", e -> showAssignBoardIDs()); // New Feature
         addSidebarButton(sidebar, "Generate Reports", e -> showReportGeneration());
         addSidebarButton(sidebar, "Manage Awards", e -> showAwardManagement());
         addSidebarButton(sidebar, "Log out", e -> showLogOut());
@@ -65,7 +66,7 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    
+    // --- RESTORED FUNCTION: Create Session ---
     private void showSessionCreation() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
@@ -118,6 +119,7 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.repaint();
     }
 
+    // --- RESTORED FUNCTION: Assign Evaluators ---
     private void showAssignEvaluators() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
@@ -174,6 +176,47 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.repaint();
     }
 
+    // --- NEW FUNCTION: Assign Board IDs ---
+    private void showAssignBoardIDs() {
+        contentPanel.removeAll();
+        contentPanel.setLayout(new BorderLayout());
+
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("Assign Poster Board IDs"));
+
+        // Filter for Poster sessions only
+        ArrayList<Submission> posters = new ArrayList<>();
+        for (Submission s : DataManager.allSubmissions) {
+            if (s.getPresentationType().contains("Poster")) {
+                posters.add(s);
+            }
+        }
+        
+        JComboBox<Submission> posterCombo = new JComboBox<>(posters.toArray(new Submission[0]));
+        JTextField boardField = new JTextField();
+        JButton updateBtn = new JButton("Update Board ID");
+        
+        updateBtn.addActionListener(e -> {
+            Submission s = (Submission) posterCombo.getSelectedItem();
+            if(s != null) {
+                s.setBoardID(boardField.getText());
+                JOptionPane.showMessageDialog(this, "Updated Board ID for " + s.getStudentName());
+            }
+        });
+        
+        panel.add(new JLabel("Select Poster Submission:"));
+        panel.add(posterCombo);
+        panel.add(new JLabel("New Board ID:"));
+        panel.add(boardField);
+        panel.add(new JLabel("")); // Spacer
+        panel.add(updateBtn);
+        
+        contentPanel.add(panel, BorderLayout.NORTH);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    // --- RESTORED FUNCTION: Report Generation ---
     private void showReportGeneration() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
@@ -185,9 +228,7 @@ public class CoordinatorPanel extends JPanel {
         panel.add(new JLabel("Generate Reports", SwingConstants.CENTER));
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        String[] reportTypes = {
-                "Full Seminar Report"
-        };
+        String[] reportTypes = { "Full Seminar Report" };
 
         for (String report : reportTypes) {
             JButton reportBtn = new JButton("Generate: " + report);
@@ -226,15 +267,16 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.repaint();
     }
 
+    // --- UPDATED FUNCTION: Award Management ---
     private void showAwardManagement() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
-        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
-        panel.setBorder(BorderFactory.createTitledBorder("Manage Awards"));
+        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("Manage Awards & Agenda"));
 
         panel.add(new JLabel("Award Category:"));
         JComboBox<String> awardCombo = new JComboBox<>(
-                new String[]{"Best Oral Presentation", "Best Poster Presentation"});
+                new String[]{"Best Oral Presentation", "Best Poster Presentation", "People's Choice"}); // Added People's Choice
         panel.add(awardCombo);
 
         JButton saveBtn = new JButton("Compute Winner");
@@ -243,29 +285,43 @@ public class CoordinatorPanel extends JPanel {
 
         saveBtn.addActionListener(e -> {
             String selectedCategory = (String) awardCombo.getSelectedItem();
-            Evaluation winner = null;
+            String resultMsg = "";
 
-            // 1. Check which category was selected and call the correct logic
-            if (selectedCategory.contains("Oral")) {
-                winner = DataManager.getBestPresenter("Oral");
-            } else if (selectedCategory.contains("Poster")) {
-                winner = DataManager.getBestPresenter("Poster");
-            }
-
-            // 2. Display Result
-            if (winner != null){
-                JOptionPane.showMessageDialog(this, 
-                    "Award: " + selectedCategory + "\n" + 
-                    "Winner: " + winner.getPresenterName() + "\n" + 
-                    "Score: " + winner.getTotalScore() + "/40");
+            if (selectedCategory.contains("People")) {
+                // Logic for People's Choice
+                Submission winner = DataManager.getPeoplesChoiceWinner();
+                if (winner != null) {
+                    resultMsg = "People's Choice Winner: " + winner.getStudentName() + " (" + winner.getVoteCount() + " votes)";
+                } else {
+                    resultMsg = "No votes cast yet.";
+                }
             } else {
-                JOptionPane.showMessageDialog(this,
-                    "No evaluations found for " + selectedCategory + " yet!");
+                // Existing logic
+                Evaluation winner = null;
+                if (selectedCategory.contains("Oral")) winner = DataManager.getBestPresenter("Oral");
+                else if (selectedCategory.contains("Poster")) winner = DataManager.getBestPresenter("Poster");
+                
+                if (winner != null) resultMsg = "Winner: " + winner.getPresenterName() + " Score: " + winner.getTotalScore();
+                else resultMsg = "No evaluations found.";
             }
+            JOptionPane.showMessageDialog(this, resultMsg);
+        });
+
+        // NEW: Generate Award Agenda
+        JButton agendaBtn = new JButton("Generate Award Agenda");
+        agendaBtn.addActionListener(e -> {
+            String agenda = DataManager.generateAwardAgenda();
+            JTextArea area = new JTextArea(agenda);
+            JOptionPane.showMessageDialog(this, new JScrollPane(area), "Award Ceremony Agenda", JOptionPane.INFORMATION_MESSAGE);
         });
 
         contentPanel.add(panel, BorderLayout.CENTER);
-        contentPanel.add(saveBtn, BorderLayout.SOUTH);
+        
+        JPanel southPanel = new JPanel(new GridLayout(2,1));
+        southPanel.add(saveBtn);
+        southPanel.add(agendaBtn);
+        contentPanel.add(southPanel, BorderLayout.SOUTH);
+        
         contentPanel.revalidate();
         contentPanel.repaint();
     }

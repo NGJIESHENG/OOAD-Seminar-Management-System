@@ -7,8 +7,6 @@ public class DataManager {
     public static ArrayList<Session> allSessions = new ArrayList<>();
     public static ArrayList<Submission> allSubmissions = new ArrayList<>();
     public static ArrayList<Evaluation> allEvaluations = new ArrayList<>();
-    
-    // Links between Students and Evaluators
     public static ArrayList<Assignment> allAssignments = new ArrayList<>(); 
 
     // === SESSION MANAGEMENT ===
@@ -43,6 +41,51 @@ public class DataManager {
         return winner;
     }
 
+    // NEW: Get People's Choice Winner (Highest Vote Count)
+    public static Submission getPeoplesChoiceWinner() {
+        Submission winner = null;
+        int maxVotes = -1;
+        for (Submission s : allSubmissions) {
+            if (s.getVoteCount() > maxVotes && s.getVoteCount() > 0) {
+                maxVotes = s.getVoteCount();
+                winner = s;
+            }
+        }
+        return winner;
+    }
+
+    // NEW: Generate Award Ceremony Agenda
+    public static String generateAwardAgenda() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("=========================================\n");
+        sb.append("      FCI SEMINAR AWARD CEREMONY AGENDA  \n");
+        sb.append("=========================================\n\n");
+        sb.append("14:00 - Opening Speech by Dean\n");
+        sb.append("14:15 - Keynote Session\n");
+        sb.append("15:00 - Tea Break\n");
+        sb.append("15:30 - AWARD PRESENTATION:\n\n");
+        
+        // Calculate and display winners dynamically
+        Evaluation bestOral = getBestPresenter("Oral");
+        sb.append("   1. BEST ORAL PRESENTATION\n");
+        if(bestOral != null) sb.append("      Winner: ").append(bestOral.getPresenterName()).append("\n");
+        else sb.append("      Winner: To be announced\n");
+
+        Evaluation bestPoster = getBestPresenter("Poster");
+        sb.append("\n   2. BEST POSTER PRESENTATION\n");
+        if(bestPoster != null) sb.append("      Winner: ").append(bestPoster.getPresenterName()).append("\n");
+        else sb.append("      Winner: To be announced\n");
+
+        Submission peopleChoice = getPeoplesChoiceWinner();
+        sb.append("\n   3. PEOPLE'S CHOICE AWARD\n");
+        if(peopleChoice != null) sb.append("      Winner: ").append(peopleChoice.getStudentName()).append("\n");
+        else sb.append("      Winner: To be announced\n");
+        
+        sb.append("\n16:30 - Closing Ceremony & Photography\n");
+        return sb.toString();
+    }
+
+    // === RESTORED & UPDATED: Full Seminar Report ===
     public static String generateFullSeminarReport(){
         StringBuilder report = new StringBuilder();
         report.append("=========================================\n");
@@ -67,13 +110,8 @@ public class DataManager {
         // Calculate Averages
         if(!allEvaluations.isEmpty()) {
             double avgScore = 0;
-            double avgClarity = 0;
-            double avgMethod = 0;
-            
             for(Evaluation e : allEvaluations) {
                 avgScore += e.getTotalScore();
-                // We'd need getters for individual scores in Evaluation.java to do precise breakdown
-                // For now, we assume total score average
             }
             avgScore /= allEvaluations.size();
             report.append(String.format("Average Overall Score: %.2f / 40\n", avgScore));
@@ -90,8 +128,8 @@ public class DataManager {
             report.append("Average Score: N/A (No evaluations yet)\n");
         }
 
-        // --- SECTION 2: AWARD WINNERS ---
-        report.append("\n--- 2. AWARD NOMINATIONS ---\n");
+        // --- SECTION 2: AWARD NOMINATIONS ---
+        report.append("\n--- 2. AWARD WINNERS ---\n");
         
         Evaluation bestOral = getBestPresenter("Oral");
         if (bestOral != null){
@@ -110,6 +148,15 @@ public class DataManager {
         } else {
             report.append("Best Poster Presenter: N/A\n");
         }
+        
+        Submission peopleChoice = getPeoplesChoiceWinner();
+        if (peopleChoice != null) {
+            report.append("[PEOPLE'S CHOICE]\n")
+                  .append("   Winner: ").append(peopleChoice.getStudentName())
+                  .append("\n   Votes: ").append(peopleChoice.getVoteCount()).append("\n");
+        } else {
+            report.append("People's Choice: N/A (No votes)\n");
+        }
 
         // --- SECTION 3: DETAILED LISTS ---
         report.append("\n--- 3. SESSION SCHEDULE ---\n");
@@ -120,8 +167,12 @@ public class DataManager {
 
         report.append("\n--- 4. DETAILED SUBMISSION LIST ---\n");
         for (Submission sub : allSubmissions){
-            report.append(String.format("- %s [%s]: \"%s\"\n", 
-                sub.getStudentName(), sub.getPresentationType(), sub.getTitle()));
+            String boardInfo = sub.getPresentationType().contains("Poster") 
+                               ? " [Board ID: " + sub.getBoardID() + "]" 
+                               : "";
+            
+            report.append(String.format("- %s [%s]%s: \"%s\"\n", 
+                sub.getStudentName(), sub.getPresentationType(), boardInfo, sub.getTitle()));
         }
         
         report.append("\n--- END OF REPORT ---\n");
