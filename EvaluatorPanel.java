@@ -1,8 +1,8 @@
-import java.awt.*;
-import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.ArrayList;
 
 public class EvaluatorPanel extends JPanel {
     private JFrame parent;
@@ -15,7 +15,7 @@ public class EvaluatorPanel extends JPanel {
         add(createSidebar(), BorderLayout.WEST);
 
         contentPanel = new JPanel();
-        contentPanel.setLayout(new BorderLayout()); // Changed to BorderLayout for flexibility
+        contentPanel.setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         add(contentPanel, BorderLayout.CENTER);
 
@@ -64,7 +64,7 @@ public class EvaluatorPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    // --- NEW: Search & Filter Logic Added Here ---
+    // --- UPDATED: Search & Filter Logic ---
     private void showAssignedPresentations() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
@@ -112,10 +112,9 @@ public class EvaluatorPanel extends JPanel {
                     }
                 }
             }
-            if (!found && !query.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No assignments found matching '" + query + "'");
-            } else if (!found && query.isEmpty()) {
-                model.addRow(new Object[]{"No assignments", "-", "-"});
+            
+            if (!found && query.isEmpty()) {
+                // Optional: Show message if list is empty
             }
         };
 
@@ -138,18 +137,19 @@ public class EvaluatorPanel extends JPanel {
 
     private void showEvaluationForm() {
         contentPanel.removeAll();
-        contentPanel.setLayout(new GridLayout(6, 1, 10, 10)); // Simple Grid for form
+        contentPanel.setLayout(new GridLayout(6, 1, 10, 10));
 
         JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p1.add(new JLabel("Select Student:"));
         
-        // Only show students assigned to this evaluator
+        // Filter student list to only show those assigned to this evaluator
         ArrayList<String> myStudents = new ArrayList<>();
         for (Assignment a : DataManager.allAssignments) {
             if (a.getEvaluatorName().equals(DataManager.currentUser)) {
                 myStudents.add(a.getSubmission().getStudentName());
             }
         }
+        
         JComboBox<String> studentBox = new JComboBox<>(myStudents.toArray(new String[0]));
         p1.add(studentBox);
 
@@ -189,7 +189,7 @@ public class EvaluatorPanel extends JPanel {
                 (int) claritySpin.getValue(),
                 (int) methodSpin.getValue(),
                 (int) resultSpin.getValue(),
-                (int) claritySpin.getValue(), // Using clarity as placeholder for Presentation score
+                (int) claritySpin.getValue(), 
                 comments.getText()
             );
             DataManager.allEvaluations.add(ev);

@@ -1,8 +1,8 @@
-import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 
 public class CoordinatorPanel extends JPanel {
     private JFrame parent;
@@ -39,7 +39,7 @@ public class CoordinatorPanel extends JPanel {
 
         addSidebarButton(sidebar, "Create Session", e -> showSessionCreation());
         addSidebarButton(sidebar, "Assign Evaluators", e -> showAssignEvaluators());
-        addSidebarButton(sidebar, "View Assignments", e -> showViewAssignments()); // NEW BUTTON
+        addSidebarButton(sidebar, "View Assignments", e -> showViewAssignments()); // NEW
         addSidebarButton(sidebar, "Generate Reports", e -> showReportGeneration());
         addSidebarButton(sidebar, "Manage Awards", e -> showAwardManagement());
         
@@ -80,7 +80,7 @@ public class CoordinatorPanel extends JPanel {
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         
         JTextField searchField = new JTextField(15);
-        JComboBox<String> typeFilter = new JComboBox<>(new String[]{"All Types", "Oral Session", "Poster Session"});
+        JComboBox<String> typeFilter = new JComboBox<>(new String[]{"All Types", "Oral", "Poster"});
         JButton applyBtn = new JButton("Apply Filters");
 
         filterPanel.add(new JLabel("Search Student:"));
@@ -104,13 +104,11 @@ public class CoordinatorPanel extends JPanel {
                 boolean nameMatch = nameQuery.isEmpty() || a.getSubmission().getStudentName().toLowerCase().contains(nameQuery);
                 
                 boolean typeMatch = true;
+                String pType = a.getSubmission().getPresentationType(); // "Oral Presentation" etc
+
                 if (!"All Types".equals(typeQuery)) {
-                    // Assuming Presentation Type maps somewhat to Session Type logic or is stored in Submission
-                    // The Submission class has 'presentationType'
-                    String pType = a.getSubmission().getPresentationType(); // "Oral Presentation" etc
-                    // Simple contains check to handle "Oral Presentation" vs "Oral Session" mismatch
-                    if (typeQuery.contains("Oral") && !pType.contains("Oral")) typeMatch = false;
-                    if (typeQuery.contains("Poster") && !pType.contains("Poster")) typeMatch = false;
+                    if (typeQuery.equals("Oral") && !pType.contains("Oral")) typeMatch = false;
+                    if (typeQuery.equals("Poster") && !pType.contains("Poster")) typeMatch = false;
                 }
 
                 if (nameMatch && typeMatch) {
@@ -137,8 +135,6 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    // --- Existing Methods (Simplified for brevity, logic retained) ---
-    
     private void showSessionCreation() {
         contentPanel.removeAll();
         contentPanel.setLayout(new GridLayout(0, 2, 10, 10));
@@ -184,7 +180,10 @@ public class CoordinatorPanel extends JPanel {
         
         JButton assignBtn = new JButton("Assign");
         assignBtn.addActionListener(e -> {
-            if(subBox.getSelectedIndex() == -1) return;
+            if(subBox.getSelectedIndex() == -1) {
+                JOptionPane.showMessageDialog(this, "No submissions available to assign!");
+                return;
+            }
             Submission s = DataManager.allSubmissions.get(subBox.getSelectedIndex());
             String evaluator = (String) evalBox.getSelectedItem();
             DataManager.allAssignments.add(new Assignment(s, evaluator));
@@ -213,9 +212,24 @@ public class CoordinatorPanel extends JPanel {
     }
     
     private void showAwardManagement() {
-        // Placeholder for brevity, existing logic applies
-        contentPanel.removeAll();
-        contentPanel.add(new JLabel("Award Management Logic Here"));
+         contentPanel.removeAll();
+        contentPanel.setLayout(new GridLayout(5, 2, 10, 10));
+
+        JComboBox<String> awardTypeBox = new JComboBox<>(new String[]{"Best Presentation", "Best Poster", "Best Research"});
+        JButton calcBtn = new JButton("Compute and Save Winner");
+
+        calcBtn.addActionListener(e -> {
+             Evaluation best = new DataManager().getBestOralPresenter();
+             if(best != null) {
+                 JOptionPane.showMessageDialog(this, "Winner: " + best.getPresenterName() + " Score: " + best.getTotalScore());
+             } else {
+                 JOptionPane.showMessageDialog(this, "No evaluations found yet.");
+             }
+        });
+
+        contentPanel.add(new JLabel("Award Category:")); contentPanel.add(awardTypeBox);
+        contentPanel.add(new JLabel("")); contentPanel.add(calcBtn);
+
         contentPanel.revalidate(); contentPanel.repaint();
     }
 

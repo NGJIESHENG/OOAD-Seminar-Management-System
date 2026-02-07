@@ -1,7 +1,7 @@
-import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 
 public class StudentPanel extends JPanel {
     private JFrame parent;
@@ -63,7 +63,7 @@ public class StudentPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    // --- NEW: Filter by Status Logic ---
+    // --- NEW: Filter by Status & Date Logic ---
     private void showMySubmissions() {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
@@ -82,7 +82,7 @@ public class StudentPanel extends JPanel {
         filterPanel.add(applyBtn);
 
         // Table
-        String[] columns = {"Title", "Type", "Status", "Score (if available)"};
+        String[] columns = {"Title", "Type", "Status", "Score"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         JTable table = new JTable(model);
         JScrollPane scrollPane = new JScrollPane(table);
@@ -92,15 +92,15 @@ public class StudentPanel extends JPanel {
             String selectedStatus = (String) statusFilter.getSelectedItem();
 
             for (Submission s : DataManager.allSubmissions) {
+                // Filter 1: Must belong to logged-in user
                 if (s.getStudentName().equals(DataManager.currentUser)) {
                     
-                    // Determine Status
+                    // Check Status by looking for an Evaluation
                     boolean isEvaluated = false;
                     int score = -1;
                     
                     for (Evaluation ev : DataManager.allEvaluations) {
-                        // Matching logic: Assuming presenter Name is unique for this prototype 
-                        // as Evaluation class doesn't store Title.
+                        // Matching logic: In this prototype, we match by Presenter Name
                         if (ev.getPresenterName().equals(s.getStudentName())) {
                             isEvaluated = true;
                             score = ev.getTotalScore();
@@ -108,6 +108,7 @@ public class StudentPanel extends JPanel {
                         }
                     }
 
+                    // Filter 2: Apply Status Filter
                     boolean match = true;
                     if ("Pending".equals(selectedStatus) && isEvaluated) match = false;
                     if ("Evaluated".equals(selectedStatus) && !isEvaluated) match = false;
@@ -163,7 +164,7 @@ public class StudentPanel extends JPanel {
                 DataManager.currentUser
             );
             DataManager.allSubmissions.add(sub);
-            JOptionPane.showMessageDialog(this, "Registration submitted!");
+            JOptionPane.showMessageDialog(this, "Registration submitted successfully for: " + titleField.getText());
         });
 
         contentPanel.add(new JLabel("")); contentPanel.add(submitBtn);
