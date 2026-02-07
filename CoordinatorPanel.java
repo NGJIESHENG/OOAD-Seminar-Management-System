@@ -1,8 +1,9 @@
+import java.awt.*;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
 
 public class CoordinatorPanel extends JPanel {
     private JFrame parent;
@@ -40,6 +41,7 @@ public class CoordinatorPanel extends JPanel {
         addSidebarButton(sidebar, "Create Session", e -> showSessionCreation());
         addSidebarButton(sidebar, "Assign Evaluators", e -> showAssignEvaluators());
         addSidebarButton(sidebar, "View Assignments", e -> showViewAssignments()); // NEW
+        addSidebarButton(sidebar, "Assign Board IDs", e -> showAssignBoardIDs());
         addSidebarButton(sidebar, "Generate Reports", e -> showReportGeneration());
         addSidebarButton(sidebar, "Manage Awards", e -> showAwardManagement());
         
@@ -169,6 +171,35 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.revalidate(); contentPanel.repaint();
     }
 
+    private void showAssignBoardIDs() {
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridLayout(4, 2, 10, 10));
+        ((JComponent) contentPanel).setBorder(BorderFactory.createTitledBorder("Assign Poster Board IDs"));
+
+        ArrayList<Submission> posters = new ArrayList<>();
+        for (Submission s : DataManager.allSubmissions) {
+            if (s.getPresentationType().contains("Poster")) posters.add(s);
+        }
+        
+        JComboBox<Submission> posterCombo = new JComboBox<>(posters.toArray(new Submission[0]));
+        JTextField boardField = new JTextField();
+        JButton updateBtn = new JButton("Update Board ID");
+        
+        updateBtn.addActionListener(e -> {
+            Submission s = (Submission) posterCombo.getSelectedItem();
+            if(s != null) {
+                s.setBoardID(boardField.getText());
+                JOptionPane.showMessageDialog(this, "Updated Board ID for " + s.getStudentName());
+            }
+        });
+
+        contentPanel.add(new JLabel("Select Poster Submission:")); contentPanel.add(posterCombo);
+        contentPanel.add(new JLabel("New Board ID:")); contentPanel.add(boardField);
+        contentPanel.add(new JLabel("")); contentPanel.add(updateBtn);
+        
+        contentPanel.revalidate(); contentPanel.repaint();
+    }
+
     private void showAssignEvaluators() {
         contentPanel.removeAll();
         contentPanel.setLayout(new GridLayout(5, 2, 10, 10));
@@ -212,23 +243,36 @@ public class CoordinatorPanel extends JPanel {
     }
     
     private void showAwardManagement() {
-         contentPanel.removeAll();
-        contentPanel.setLayout(new GridLayout(5, 2, 10, 10));
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridLayout(6, 2, 10, 10));
 
-        JComboBox<String> awardTypeBox = new JComboBox<>(new String[]{"Best Presentation", "Best Poster", "Best Research"});
-        JButton calcBtn = new JButton("Compute and Save Winner");
+        JComboBox<String> awardTypeBox = new JComboBox<>(new String[]{"Best Oral Presentation", "Best Poster Presentation", "People's Choice"});
+        JButton calcBtn = new JButton("Compute Winner");
 
         calcBtn.addActionListener(e -> {
-             Evaluation best = new DataManager().getBestOralPresenter();
-             if(best != null) {
-                 JOptionPane.showMessageDialog(this, "Winner: " + best.getPresenterName() + " Score: " + best.getTotalScore());
+             String type = (String) awardTypeBox.getSelectedItem();
+             String msg = "";
+             
+             if(type.contains("People")) {
+                 Submission s = DataManager.getPeoplesChoiceWinner();
+                 msg = (s != null) ? "People's Choice: " + s.getStudentName() + " (" + s.getVoteCount() + " votes)" : "No votes yet.";
              } else {
-                 JOptionPane.showMessageDialog(this, "No evaluations found yet.");
+                 Evaluation ev = type.contains("Oral") ? DataManager.getBestPresenter("Oral") : DataManager.getBestPresenter("Poster");
+                 msg = (ev != null) ? "Winner: " + ev.getPresenterName() + " Score: " + ev.getTotalScore() : "No evaluations yet.";
              }
+             JOptionPane.showMessageDialog(this, msg);
+        });
+        
+        JButton agendaBtn = new JButton("Generate Ceremony Agenda");
+        agendaBtn.addActionListener(e -> {
+            JTextArea area = new JTextArea(DataManager.generateAwardAgenda());
+            JOptionPane.showMessageDialog(this, new JScrollPane(area), "Agenda", JOptionPane.INFORMATION_MESSAGE);
         });
 
         contentPanel.add(new JLabel("Award Category:")); contentPanel.add(awardTypeBox);
         contentPanel.add(new JLabel("")); contentPanel.add(calcBtn);
+        contentPanel.add(new JLabel("----------------")); contentPanel.add(new JLabel("----------------"));
+        contentPanel.add(new JLabel("Ceremony Docs:")); contentPanel.add(agendaBtn);
 
         contentPanel.revalidate(); contentPanel.repaint();
     }
