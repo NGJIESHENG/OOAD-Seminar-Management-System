@@ -234,24 +234,34 @@ public class CoordinatorPanel extends JPanel {
 
         panel.add(new JLabel("Award Category:"));
         JComboBox<String> awardCombo = new JComboBox<>(
-                new String[]{"Best Presentation", "Best Poster", "Best Research"});
+                new String[]{"Best Oral Presentation", "Best Poster Presentation"});
         panel.add(awardCombo);
 
-        JButton saveBtn = new JButton("Compute and Save Winner");
+        JButton saveBtn = new JButton("Compute Winner");
         saveBtn.setBackground(new Color(50, 150, 50));
         saveBtn.setForeground(Color.WHITE);
 
         saveBtn.addActionListener(e -> {
-            Evaluation winner = DataManager.getBestOralPresenter();
-            if (winner != null){
-                String category = (String) awardCombo.getSelectedItem();
-                JOptionPane.showMessageDialog(this, "Award: " + category + "\n" + "Winner: " + winner.getPresenterName() +
-            "\n" + "Score: " + winner.getTotalScore() + "/40");
+            String selectedCategory = (String) awardCombo.getSelectedItem();
+            Evaluation winner = null;
 
-            }else{
-                JOptionPane.showMessageDialog(this,"No evaluations found! Please have an Evaluator submit scores first.");
+            // 1. Check which category was selected and call the correct logic
+            if (selectedCategory.contains("Oral")) {
+                winner = DataManager.getBestPresenter("Oral");
+            } else if (selectedCategory.contains("Poster")) {
+                winner = DataManager.getBestPresenter("Poster");
             }
-            
+
+            // 2. Display Result
+            if (winner != null){
+                JOptionPane.showMessageDialog(this, 
+                    "Award: " + selectedCategory + "\n" + 
+                    "Winner: " + winner.getPresenterName() + "\n" + 
+                    "Score: " + winner.getTotalScore() + "/40");
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "No evaluations found for " + selectedCategory + " yet!");
+            }
         });
 
         contentPanel.add(panel, BorderLayout.CENTER);
