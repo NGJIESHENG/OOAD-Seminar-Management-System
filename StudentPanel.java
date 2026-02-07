@@ -1,7 +1,9 @@
+import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
 
 public class StudentPanel extends JPanel {
     private JFrame parent;
@@ -37,6 +39,8 @@ public class StudentPanel extends JPanel {
         sidebar.add(Box.createRigidArea(new Dimension(0, 30)));
 
         addSidebarButton(sidebar, "Register for Seminar", e -> showStudentRegistration());
+        addSidebarButton(sidebar, "Upload Materials", e -> showUploadMaterials());
+        addSidebarButton(sidebar, "Vote People's Choice", e -> showVoting());
         addSidebarButton(sidebar, "View My Submissions", e -> showMySubmissions());
         
         sidebar.add(Box.createVerticalGlue());
@@ -61,6 +65,80 @@ public class StudentPanel extends JPanel {
         contentPanel.add(welcome, BorderLayout.CENTER);
         contentPanel.revalidate();
         contentPanel.repaint();
+    }
+
+    private void showUploadMaterials() {
+        contentPanel.removeAll();
+        contentPanel.setLayout(new BorderLayout());
+        
+        // 1. Get My Submissions
+        ArrayList<Submission> mySubs = new ArrayList<>();
+        for(Submission s : DataManager.allSubmissions) {
+            if(s.getStudentName().equals(DataManager.currentUser)) mySubs.add(s);
+        }
+
+        if(mySubs.isEmpty()) {
+            contentPanel.add(new JLabel("No registrations found. Please register first.", SwingConstants.CENTER));
+            contentPanel.revalidate(); contentPanel.repaint();
+            return;
+        }
+
+        JPanel center = new JPanel(new GridLayout(4, 1, 10, 10));
+        JComboBox<Submission> subBox = new JComboBox<>(mySubs.toArray(new Submission[0]));
+        JLabel statusLabel = new JLabel("Current File: " + mySubs.get(0).getPresentationFilePath(), SwingConstants.CENTER);
+        JButton uploadBtn = new JButton("Choose File (PDF/PPT)");
+
+        subBox.addActionListener(e -> {
+            Submission s = (Submission) subBox.getSelectedItem();
+            if(s != null) statusLabel.setText("Current File: " + s.getPresentationFilePath());
+        });
+
+        uploadBtn.addActionListener(e -> {
+            Submission s = (Submission) subBox.getSelectedItem();
+            JFileChooser fc = new JFileChooser();
+            if(fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                File f = fc.getSelectedFile();
+                s.setPresentationFilePath(f.getAbsolutePath());
+                statusLabel.setText("Current File: " + f.getName());
+                JOptionPane.showMessageDialog(this, "Uploaded: " + f.getName());
+            }
+        });
+
+        center.add(new JLabel("Select Submission:", SwingConstants.CENTER));
+        center.add(subBox);
+        center.add(statusLabel);
+        center.add(uploadBtn);
+        
+        contentPanel.add(center, BorderLayout.CENTER);
+        contentPanel.revalidate(); contentPanel.repaint();
+    }
+
+    private void showVoting() {
+        contentPanel.removeAll();
+        contentPanel.setLayout(new BorderLayout());
+        
+        DefaultListModel<Submission> model = new DefaultListModel<>();
+        for(Submission s : DataManager.allSubmissions) {
+            if(!s.getStudentName().equals(DataManager.currentUser)) model.addElement(s);
+        }
+
+        JList<Submission> list = new JList<>(model);
+        JButton voteBtn = new JButton("Vote for Selected Peer");
+        
+        voteBtn.addActionListener(e -> {
+            Submission s = list.getSelectedValue();
+            if(s != null) {
+                s.addVote();
+                JOptionPane.showMessageDialog(this, "You voted for " + s.getStudentName());
+                voteBtn.setEnabled(false);
+            }
+        });
+
+        contentPanel.add(new JLabel("Select a peer to vote for (People's Choice):", SwingConstants.CENTER), BorderLayout.NORTH);
+        contentPanel.add(new JScrollPane(list), BorderLayout.CENTER);
+        contentPanel.add(voteBtn, BorderLayout.SOUTH);
+        
+        contentPanel.revalidate(); contentPanel.repaint();
     }
 
     // --- NEW: Filter by Status & Date Logic ---
