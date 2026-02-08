@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -231,26 +232,72 @@ public class CoordinatorPanel extends JPanel {
         contentPanel.removeAll();
         contentPanel.setLayout(new BorderLayout());
 
+        // 1. Create Button Panel
         JPanel buttonPanel = new JPanel(new FlowLayout());
+        
         JButton fullReportBtn = new JButton ("Full Seminar Report");
         JButton participantBtn = new JButton ("Participant List");
         JButton scheduleBtn = new JButton ("Session Schedule");
         
+        //Export Button
+        JButton exportBtn = new JButton("Export to .txt");
+        exportBtn.setBackground(new Color(0, 102, 51)); // Dark Green for emphasis
+        exportBtn.setForeground(Color.WHITE);
+        
+        // 2. Create Text Area
         JTextArea area = new JTextArea();
         area.setFont(new Font("Monospaced", Font.PLAIN, 12));
         area.setEditable(false);
+        area.setMargin(new Insets(10, 10, 10, 10)); // Add some padding
 
+        // 3. Add Action Listeners for Generating Reports
         fullReportBtn.addActionListener(e -> area.setText(DataManager.generateFullSeminarReport()));
         participantBtn.addActionListener(e -> area.setText(DataManager.generateParticipantList()));
         scheduleBtn.addActionListener(e -> area.setText(DataManager.generateSessionSchedule()));
         
+        // 4. Action Listener for Exporting
+        exportBtn.addActionListener(e -> {
+            if (area.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please generate a report first before exporting.", "Empty Report", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Report As");
+            
+            // Default file name based on what's in the text area (optional logic)
+            fileChooser.setSelectedFile(new File("Seminar_Report.txt"));
+
+            int userSelection = fileChooser.showSaveDialog(this);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                
+                // Auto-append .txt extension if user forgot it
+                if (!fileToSave.getAbsolutePath().endsWith(".txt")) {
+                    fileToSave = new File(fileToSave.getAbsolutePath() + ".txt");
+                }
+
+                try {
+                    DataManager.saveStringToFile(area.getText(), fileToSave);
+                    JOptionPane.showMessageDialog(this, "Report saved successfully to:\n" + fileToSave.getAbsolutePath());
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Error saving file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        
+        // 5. Add Buttons to Panel
         buttonPanel.add(fullReportBtn);
         buttonPanel.add(participantBtn);
         buttonPanel.add(scheduleBtn);
+        buttonPanel.add(Box.createHorizontalStrut(20)); // Spacer
+        buttonPanel.add(exportBtn);
         
         contentPanel.add(buttonPanel, BorderLayout.NORTH);
         contentPanel.add(new JScrollPane(area), BorderLayout.CENTER);
-        contentPanel.revalidate(); contentPanel.repaint();
+        contentPanel.revalidate(); 
+        contentPanel.repaint();
     }
     
     private void showAwardManagement() {
