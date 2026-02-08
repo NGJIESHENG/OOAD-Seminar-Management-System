@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class DataManager {
@@ -48,7 +51,12 @@ public class DataManager {
         return winner;
     }
 
-    
+    public static void saveStringToFile(String content, File file) throws IOException {
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(content);
+        }
+    }
+
     public static String generateAwardAgenda() {
         StringBuilder sb = new StringBuilder();
         sb.append("=========================================\n");
